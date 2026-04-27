@@ -1,3 +1,5 @@
+import { CARD_IMAGES } from './cardImages';
+
 export interface TarotCard {
   id: string;
   name: { en: string; vi: string };
@@ -145,11 +147,12 @@ export function generateDeck(): TarotCard[] {
       meanR: { en: "Review your path...", vi: "Hãy xem xét lại con đường của bạn..." }
     };
     const paddedIndex = i.toString().padStart(2, '0');
+    const imageKey = `m${paddedIndex}`;
     deck.push({
       id: `major-${i}`,
       name: { en: data.en, vi: data.vi },
       value: nameEn,
-      imageUrl: `/assets/cards/m${paddedIndex}.PNG`,
+      imageUrl: CARD_IMAGES[imageKey] || `/assets/cards/${imageKey}.PNG`,
       meaning: {
         upright: data.meanU,
         reversed: data.meanR
@@ -205,6 +208,7 @@ export function generateDeck(): TarotCard[] {
   SUITS.forEach(suit => {
     MINOR_VALUES.forEach((val, i) => {
       const valNum = (i + 1).toString().padStart(2, '0');
+      const imageKey = `${suitPrefixes[suit]}${valNum}`;
       const valMean = VALUE_MEANINGS[val];
       const suitMean = SUIT_MEANINGS[suit];
       
@@ -213,7 +217,7 @@ export function generateDeck(): TarotCard[] {
         name: { en: `${val} of ${suit}`, vi: `${valueVietNamese[val]} ${minorVietNamese[suit]}` },
         suit,
         value: val,
-        imageUrl: `/assets/cards/${suitPrefixes[suit]}${valNum}.PNG`,
+        imageUrl: CARD_IMAGES[imageKey] || `/assets/cards/${imageKey}.PNG`,
         meaning: {
           upright: { 
             en: `${valMean.upright}: ${suitMean.upright.en}`, 

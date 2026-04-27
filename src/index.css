@@ -204,62 +204,6 @@
   100% { transform: rotate(360deg) scale(1); }
 }
 
-.mystic-glow {
-  filter: drop-shadow(0 0 8px rgba(197, 160, 89, 0.4));
-}
-
-.float-animation {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
-}
-
-.sparkle-slow {
-  animation: sparkle 4s ease-in-out infinite;
-}
-
-@keyframes sparkle {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.2); }
-}
-
-.tarot-card-container {
-  perspective: 2000px;
-}
-
-/* Card Shine Effect */
-.card-shine::after {
-  content: '';
-  position: absolute;
-  top: -110%;
-  left: -210%;
-  width: 200%;
-  height: 200%;
-  opacity: 0;
-  transform: rotate(30deg);
-  background: rgba(255, 255, 255, 0.13);
-  background: linear-gradient(
-    to right, 
-    rgba(255, 255, 255, 0.13) 0%,
-    rgba(255, 255, 255, 0.13) 77%,
-    rgba(255, 255, 255, 0.5) 92%,
-    rgba(255, 255, 255, 0.0) 100%
-  );
-  transition: all 0.7s blur;
-}
-
-.group:hover .card-shine::after {
-  opacity: 1;
-  top: -30%;
-  left: -30%;
-  transition-property: left, top, opacity;
-  transition-duration: 0.7s, 0.7s, 0.15s;
-  transition-timing-function: ease;
-}
-
 .ritual-text {
   text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
   letter-spacing: 0.4em;

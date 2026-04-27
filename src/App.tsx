@@ -30,6 +30,7 @@ import {
 import { cn } from './lib/utils';
 import { Button, GlassCard, SectionTitle } from './components/UI';
 import { generateDeck, shuffleDeck, TarotCard, ReadingCard, SPREADS } from './lib/tarot';
+import { CARD_IMAGES } from './lib/cardImages';
 import { streamTarotInterpretation, getChatSession } from './services/gemini';
 import { useAuth, FirebaseProvider } from './components/FirebaseProvider';
 import { db, signInWithGoogle, handleFirestoreError, OperationType } from './firebase';
@@ -897,8 +898,9 @@ const TarotApp = () => {
                                   y: [0, -200, -200] 
                                 }}
                                 transition={{ duration: 4, ease: "easeInOut" }}
-                                className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back"
+                                 className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back overflow-hidden relative"
                               >
+                                <img src={CARD_IMAGES['card-back']} className="w-full h-full object-cover opacity-60" alt="card back" />
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
                               </motion.div>
                             </div>
@@ -989,8 +991,7 @@ const TarotApp = () => {
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    // Use a reliable placeholder if image fails
-                                    target.src = `https://placehold.co/400x680/161712/c5a059?text=${encodeURIComponent(card.name[currentLang])}`;
+                                    target.src = CARD_IMAGES['card-back'];
                                   }}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
@@ -999,9 +1000,9 @@ const TarotApp = () => {
                               </div>
                               
                               {/* Back Side */}
-                              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-surface-container-highest rounded-sm overflow-hidden border border-sepia shadow-2xl flex items-center justify-center tarot-card-back">
+                              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-surface-container-highest rounded-sm overflow-hidden border border-sepia shadow-2xl flex items-center justify-center">
+                                <img src={CARD_IMAGES['card-back']} className="w-full h-full object-cover" alt="card back" />
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
-                                <Sparkles className="w-8 h-8 text-primary/40 animate-pulse" />
                               </div>
                             </div>
                           </motion.div>
@@ -1014,12 +1015,13 @@ const TarotApp = () => {
                     <div className="w-40 h-64 border border-sepia rounded-sm flex items-center justify-center bg-surface-container-highest/10 relative overflow-hidden">
                       <motion.div 
                         animate={{ 
-                          y: [0, -10, 0],
                           rotateY: [0, 10, -10, 0]
                         }}
                         transition={{ repeat: Infinity, duration: 4 }}
-                        className="w-32 h-56 border border-dashed border-primary/20 bg-primary/5 rounded-sm"
-                      />
+                        className="w-32 h-56 border border-dashed border-primary/20 bg-primary/5 rounded-sm overflow-hidden"
+                      >
+                        <img src={CARD_IMAGES['card-back']} className="w-full h-full object-cover opacity-20 filter grayscale" alt="silent card" />
+                      </motion.div>
                     </div>
                     <p className="text-outline text-xs uppercase tracking-widest italic">{t('reading.silence')}</p>
                   </div>
@@ -1236,7 +1238,7 @@ const TarotApp = () => {
                                className={`w-8 h-12 object-cover rounded shadow-md ${card.isReversed ? 'rotate-180' : ''}`} 
                                onError={(e) => {
                                  const target = e.target as HTMLImageElement;
-                                 target.src = "https://placehold.co/100x150/1a1a1a/c5a059?text=Tarot";
+                                 target.src = CARD_IMAGES['card-back'];
                                }}
                              />
                              <div className="min-w-0">
