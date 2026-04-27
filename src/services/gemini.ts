@@ -1,7 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { ReadingCard } from "../lib/tarot";
 
-const DEFAULT_API_KEY = process.env.GEMINI_API_KEY;
+// In Vite, environment variables should be prefixed with VITE_ to be exposed to the client.
+// However, AI Studio uses process.env. GEMINI_API_KEY is usually provided by the platform.
+const DEFAULT_API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
 export async function* streamTarotInterpretation(
   question: string,

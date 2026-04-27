@@ -320,18 +320,9 @@ const TarotApp = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isChatOpen, isGuideOpen]);
 
-  // WebSocket logic
-  const socketRef = useRef<WebSocket | null>(null);
-
-  useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}`);
-    socketRef.current = ws;
-
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'PING' }));
-    return () => ws.close();
-  }, []);
-
+  // WebSocket logic - Removed as it causes errors on standard hosts like Vercel
+  // and isn't strictly necessary for the core app functionality.
+  
   useEffect(() => {
     setDeck(shuffleDeck(generateDeck()));
   }, []);
@@ -867,101 +858,132 @@ const TarotApp = () => {
                     </div>
                   </motion.div>
                 ) : selectedCards.length > 0 ? (
-                  selectedCards.map((card, idx) => {
-                    // Circular path calculation for orbiting effect
-                    const total = selectedCards.length;
-                    const angle = (idx / total) * (Math.PI * 2) - Math.PI / 2;
-                    const radius = 180;
-                    
-                    // Orbit points for a swirl effect
-                    const orbit1 = { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-                    const orbit2 = { x: Math.cos(angle + Math.PI/2) * radius, y: Math.sin(angle + Math.PI/2) * radius };
-                    const orbit3 = { x: Math.cos(angle + Math.PI) * radius, y: Math.sin(angle + Math.PI) * radius };
-
-                    return (
-                      <motion.div
-                        key={`${card.id}-${idx}`}
-                        initial={{ 
-                          opacity: 0, 
-                          x: 0,
-                          y: 400, // Start from hidden deck area
-                          rotateY: 180, 
-                          z: -1000,
-                          rotateX: 45,
-                          rotateZ: -180,
-                          scale: 0.1
-                        }}
-                        animate={{ 
-                          opacity: 1, 
-                          x: [0, orbit1.x, orbit2.x, orbit3.x, 0],
-                          y: [400, orbit1.y, orbit2.y, orbit3.y, 0],
-                          z: [-1000, 200, 400, 200, 0],
-                          rotateY: [180, 180, 180, 90, 0], 
-                          rotateZ: [-180, 180, 540, 900, card.isReversed ? 1260 : 1080],
-                          rotateX: [45, 20, 0, 0, 0],
-                          scale: [0.1, 1.2, 1.3, 1.2, 1],
-                        }}
-                        transition={{ 
-                          duration: 4,
-                          delay: idx * 0.25, 
-                          times: [0, 0.3, 0.5, 0.8, 1],
-                          ease: "easeInOut"
-                        }}
-                        whileHover={{ 
-                          scale: 1.08, 
-                          y: -15,
-                          z: 100,
-                          rotateX: -5,
-                          transition: { type: "spring", stiffness: 400, damping: 25 }
-                        }}
-                        onClick={() => isReadingComplete && setIsInterpretationModalOpen(true)}
-                        className={cn(
-                          "relative group preserve-3d cursor-pointer float-animation",
-                          idx % 3 === 0 ? "animation-delay-0" : idx % 3 === 1 ? "animation-delay-2000" : "animation-delay-4000"
-                        )}
-                        style={{ animationDelay: `${idx * 0.8}s` }}
-                      >
-                        <div className="absolute -top-12 left-0 right-0 text-center">
-                          <motion.span 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.25 + 3.8 }}
-                            className="text-[9px] text-primary uppercase tracking-[0.4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text"
-                          >
-                            {card.positionName}
-                          </motion.span>
-                        </div>
-                        {/* Refined container to prevent shadow bleed/surplus */}
-                        <div className="w-28 sm:w-40 aspect-[2/3.4] relative preserve-3d transition-transform duration-1000 group-hover:rotate-y-12">
-                          <div className="absolute inset-0 rounded-sm card-glow-refined pointer-events-none" />
-                          {/* Aura effect on hover - centered on card container */}
-                          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none -z-10" />
-                          {/* Front Side */}
-                          <div className={cn(
-                            "absolute inset-0 backface-hidden bg-surface-container-highest rounded-sm overflow-hidden border border-sepia transition-all duration-700 card-shine",
-                            card.isReversed && "rotate-180"
-                          )}>
-                          <div className="absolute inset-0 bg-primary/5 pointer-events-none mix-blend-overlay group-hover:bg-primary/10 transition-colors" />
-                          <img 
-                            src={card.imageUrl} 
-                            alt={card.name[currentLang]} 
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover sepia-[0.1] group-hover:sepia-0 grayscale-[0.2] group-hover:grayscale-0 transition-all duration-1000"
-                          />
-                          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                             <p className="text-[9px] text-primary-fixed font-serif italic text-center truncate tracking-wider gold-text-gradient">{card.name[currentLang]}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Back Side (visible during deal) */}
-                        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-surface-container-highest rounded-sm overflow-hidden border border-sepia shadow-2xl tarot-card-back flex items-center justify-center">
-                          <div className="w-full h-full opacity-40 mix-blend-overlay bg-gradient-to-br from-primary/30 to-transparent" />
-                          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
-                        </div>
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Rotating Circle of Cards (Placeholders) during the dealing phase */}
+                    {isDealing && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                          className="relative w-72 h-72 sm:w-96 sm:h-96"
+                        >
+                          {[...Array(12)].map((_, i) => (
+                            <div 
+                              key={`ritual-circle-${i}`}
+                              className="absolute inset-0 flex items-center justify-center"
+                              style={{ transform: `rotate(${(i * 360) / 12}deg)` }}
+                            >
+                              <motion.div 
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 0.3 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                className="w-16 h-28 sm:w-20 sm:h-32 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl -translate-y-[150px] sm:-translate-y-[200px]"
+                                style={{ transformOrigin: 'center center' }}
+                              >
+                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
+                              </motion.div>
+                            </div>
+                          ))}
+                        </motion.div>
                       </div>
-                    </motion.div>
-                  );
-                })
+                    )}
+
+                    <div className="flex flex-wrap justify-center gap-8 sm:gap-16 items-center px-4 relative z-10">
+                      {selectedCards.map((card, idx) => {
+                        const total = selectedCards.length;
+                        const angle = (idx / total) * (Math.PI * 2) - Math.PI / 2;
+                        const radius = 220;
+                        
+                        // Circle phase coordinates
+                        const circleX = Math.cos(angle) * radius;
+                        const circleY = Math.sin(angle) * radius;
+
+                        return (
+                          <motion.div
+                            key={`${card.id}-${idx}`}
+                            initial={{ 
+                              opacity: 0, 
+                              x: circleX,
+                              y: circleY, 
+                              rotateY: 180, 
+                              z: -500,
+                              rotateX: 45,
+                              rotateZ: (idx * 360) / total,
+                              scale: 0.2
+                            }}
+                            animate={{ 
+                              opacity: 1, 
+                              x: [circleX, circleX, 0],
+                              y: [circleY, circleY, 0],
+                              z: [-500, 200, 0],
+                              rotateY: [180, 180, 0], 
+                              rotateZ: [ (idx * 360) / total, (idx * 360) / total + 720, card.isReversed ? 1260 : 1080],
+                              rotateX: [45, 0, 0],
+                              scale: [0.2, 1.2, 1],
+                            }}
+                            transition={{ 
+                              duration: 3,
+                              delay: idx * 0.2, 
+                              times: [0, 0.5, 1],
+                              ease: "easeInOut"
+                            }}
+                            whileHover={{ 
+                              scale: 1.08, 
+                              y: -15,
+                              z: 100,
+                              rotateX: -5,
+                              transition: { type: "spring", stiffness: 400, damping: 25 }
+                            }}
+                            onClick={() => isReadingComplete && setIsInterpretationModalOpen(true)}
+                            className={cn(
+                              "relative group preserve-3d cursor-pointer float-animation",
+                              idx % 3 === 0 ? "animation-delay-0" : idx % 3 === 1 ? "animation-delay-2000" : "animation-delay-4000"
+                            )}
+                            style={{ animationDelay: `${idx * 0.8}s` }}
+                          >
+                            <div className="absolute -top-12 left-0 right-0 text-center">
+                              <motion.span 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.2 + 2.8 }}
+                                className="text-[9px] text-primary uppercase tracking-[0.4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text"
+                              >
+                                {card.positionName}
+                              </motion.span>
+                            </div>
+                            {/* Refined container to prevent shadow bleed/surplus */}
+                            <div className="w-28 sm:w-40 aspect-[2/3.4] relative preserve-3d transition-transform duration-1000 group-hover:rotate-y-12">
+                              <div className="absolute inset-0 rounded-sm card-glow-refined pointer-events-none" />
+                              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none -z-10" />
+                              {/* Front Side */}
+                              <div className={cn(
+                                "absolute inset-0 backface-hidden bg-surface-container-highest rounded-sm overflow-hidden border border-sepia transition-all duration-700 card-shine",
+                                card.isReversed && "rotate-180"
+                              )}>
+                                <div className="absolute inset-0 bg-primary/5 pointer-events-none mix-blend-overlay group-hover:bg-primary/10 transition-colors" />
+                                <img 
+                                  src={card.imageUrl} 
+                                  alt={card.name[currentLang]} 
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+                                   <p className="text-[8px] text-white/80 font-serif italic text-center truncate">{card.name[currentLang]}</p>
+                                </div>
+                              </div>
+                              
+                              {/* Back Side */}
+                              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-surface-container-highest rounded-sm overflow-hidden border border-sepia shadow-2xl flex items-center justify-center">
+                                <div className="w-full h-full opacity-40 mix-blend-overlay bg-gradient-to-br from-primary/30 to-transparent" />
+                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
+                                <Sparkles className="w-8 h-8 text-primary/40 animate-pulse" />
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
               ) : (
                   <div className="text-center flex flex-col items-center gap-6 opacity-30">
                     <div className="w-40 h-64 border border-sepia rounded-sm flex items-center justify-center bg-surface-container-highest/10 relative overflow-hidden">
