@@ -910,31 +910,28 @@ const TarotApp = () => {
                       </div>
                     )}
 
-                    <div className="relative w-full min-h-[400px] flex items-center justify-center">
+                    <div className="relative w-full h-[500px] flex items-center justify-center overflow-visible">
                       {selectedCards.map((card, idx) => {
                         const total = selectedCards.length;
                         const angle = (idx / total) * (Math.PI * 2) - Math.PI / 2;
-                        const radius = 250;
+                        const radius = Math.min(window.innerWidth * 0.35, 280);
                         
-                        // Ritual phase coordinates (centered)
                         const ritualX = Math.cos(angle) * radius;
                         const ritualY = Math.sin(angle) * radius;
 
-                        // Calculation for landing in a "grid-like" layout if needed
-                        // But let's stick to a clean spread
-                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 120 : 180);
+                        // Layout for final spread
+                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 100 : 160);
 
                         return (
                           <motion.div
                             key={`${card.id}-${idx}`}
                             initial={{ 
                               opacity: 0, 
-                              x: visualViewport?.width ? visualViewport.width : 0,
-                              y: 500, 
+                              x: 0,
+                              y: 200, 
                               rotateY: 180, 
-                              z: -1000,
+                              z: -500,
                               rotateX: 45,
-                              rotateZ: 0,
                               scale: 0.1
                             }}
                             animate={isReadingComplete || isInterpreting ? {
@@ -948,16 +945,16 @@ const TarotApp = () => {
                               rotateX: 0
                             } : { 
                               opacity: 1, 
-                              x: [0, ritualX, ritualX],
-                              y: [0, ritualY, ritualY],
-                              z: [-500, -200, -200],
+                              x: isDealing ? [0, ritualX, ritualX] : ritualX,
+                              y: isDealing ? [0, ritualY, ritualY] : ritualY,
+                              z: -200,
                               rotateY: 180,
-                              rotateZ: [0, (idx * 360) / total + 720, (idx * 360) / total + 1440],
+                              rotateZ: isDealing ? [0, (idx * 360) / total + 720, (idx * 360) / total + 1440] : (idx * 360) / total + 1440,
                               rotateX: 45,
-                              scale: 0.4
+                              scale: 0.5
                             }}
                             transition={{ 
-                              duration: isDealing ? 4 : 2,
+                              duration: isDealing ? 4 : 1.2,
                               ease: "circOut"
                             }}
                             whileHover={{ 
@@ -969,42 +966,40 @@ const TarotApp = () => {
                             onClick={() => isReadingComplete && setIsInterpretationModalOpen(true)}
                             className="absolute cursor-pointer preserve-3d"
                           >
-                            <div className="absolute -top-12 left-0 right-0 text-center w-full">
+                            <div className="absolute -top-12 left-0 right-0 text-center w-full z-20">
                               <motion.span 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: isReadingComplete || isInterpreting ? 1 : 0, y: isReadingComplete || isInterpreting ? 0 : 10 }}
-                                transition={{ delay: 0.5 }}
-                                className="text-[9px] text-primary uppercase tracking-[0.4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text whitespace-nowrap"
+                                className="text-[9px] text-primary uppercase tracking-[4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text whitespace-nowrap"
+                                style={{ letterSpacing: '0.4em' }}
                               >
                                 {card.positionName}
                               </motion.span>
                             </div>
-                            <div className="w-28 sm:w-40 aspect-[2/3.4] relative preserve-3d transition-transform duration-1000 group-hover:rotate-y-12">
+                            
+                            <div className="w-24 sm:w-36 aspect-[2/3.4] relative preserve-3d transition-transform duration-1000 group">
                               <div className="absolute inset-0 rounded-sm card-glow-refined pointer-events-none" />
                               <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none -z-10" />
+                              
                               {/* Front Side */}
-                              <div className={cn(
-                                "absolute inset-0 backface-hidden bg-surface-container-highest rounded-sm overflow-hidden border border-sepia transition-all duration-700 card-shine",
-                                card.isReversed && "rotate-180"
-                              )}>
-                                <div className="absolute inset-0 bg-primary/5 pointer-events-none mix-blend-overlay group-hover:bg-primary/10 transition-colors" />
+                              <div className="absolute inset-0 backface-hidden bg-surface-container-highest rounded-sm overflow-hidden border border-sepia">
                                 <img 
                                   src={card.imageUrl} 
                                   alt={card.name[currentLang]} 
-                                  className="w-full h-full object-cover shadow-inner"
+                                  className="w-full h-full object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = "https://placehold.co/400x600/1a1a1a/c5a059?text=Tarot+Card"; 
+                                    // Use a reliable placeholder if image fails
+                                    target.src = `https://placehold.co/400x680/161712/c5a059?text=${encodeURIComponent(card.name[currentLang])}`;
                                   }}
                                 />
-                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                                   <p className="text-[9px] text-primary-fixed font-serif italic text-center truncate tracking-wider gold-text-gradient">{card.name[currentLang]}</p>
+                                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                                   <p className="text-[8px] sm:text-[10px] text-primary-fixed font-serif italic text-center truncate gold-text-gradient">{card.name[currentLang]}</p>
                                 </div>
                               </div>
                               
                               {/* Back Side */}
-                              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-surface-container-highest rounded-sm overflow-hidden border border-sepia shadow-2xl flex items-center justify-center">
-                                <div className="w-full h-full opacity-40 mix-blend-overlay bg-gradient-to-br from-primary/30 to-transparent" />
+                              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-surface-container-highest rounded-sm overflow-hidden border border-sepia shadow-2xl flex items-center justify-center tarot-card-back">
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
                                 <Sparkles className="w-8 h-8 text-primary/40 animate-pulse" />
                               </div>
