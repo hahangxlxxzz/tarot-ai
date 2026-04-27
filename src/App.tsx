@@ -262,7 +262,6 @@ const TarotApp = () => {
   const [deck, setDeck] = useState<TarotCard[]>([]);
   const [selectedCards, setSelectedCards] = useState<ReadingCard[]>([]);
   const [isInterpreting, setIsInterpreting] = useState(false);
-  const [isShuffling, setIsShuffling] = useState(false);
   const [isDealing, setIsDealing] = useState(false);
   const [interpretation, setInterpretation] = useState('');
   const [isReadingComplete, setIsReadingComplete] = useState(false);
@@ -354,14 +353,11 @@ const TarotApp = () => {
   };
 
   const handleExecuteReading = async () => {
-    setIsShuffling(true);
     setInterpretation('');
     setIsReadingComplete(false);
     setSelectedCards([]);
     
-    // Phase 1: Shuffling (2.5 seconds)
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    setIsShuffling(false);
+    // Skip Shuffling, go straight to Dealing
     setIsDealing(true);
 
     const drawn: ReadingCard[] = [];
@@ -378,9 +374,12 @@ const TarotApp = () => {
     
     setSelectedCards(drawn);
     
-    // Phase 2: Ritual Circle Animation (4 seconds)
+    // Ritual Circle Animation (4 seconds)
     await new Promise(resolve => setTimeout(resolve, 4000));
     setIsDealing(false);
+
+    // Pause to allow cards to land and be seen before AI interpretation starts
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     setInterpretation(t('reading.analyzing'));
     startInterpretation(drawn);
@@ -734,7 +733,7 @@ const TarotApp = () => {
         isSidebarCollapsed ? "lg:ml-20" : "lg:ml-72"
       )}>
         <AnimatePresence mode="wait">
-          {selectedCards.length === 0 && !isShuffling && !isDealing && !isInterpreting && (
+          {selectedCards.length === 0 && !isDealing && !isInterpreting && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -797,8 +796,7 @@ const TarotApp = () => {
            <div className="flex gap-6 text-[10px] uppercase tracking-widest text-outline">
               <div>{t('reading.status.spread')}: <span className="text-primary font-bold">{currentLang === 'vi' ? activeSpread.nameVi : activeSpread.name}</span></div>
               <div>{t('reading.status.phase')}: <span className="text-primary font-bold">
-                {isShuffling ? t('reading.status.shuffling') : 
-                 isDealing ? t('reading.status.dealing', { defaultValue: 'Dealing...' }) :
+                 {isDealing ? t('reading.status.dealing', { defaultValue: 'Dealing...' }) :
                  isInterpreting ? t('reading.status.ascending') : 
                  t('reading.status.quiet')}
               </span></div>
@@ -813,7 +811,7 @@ const TarotApp = () => {
             
             {/* Atmospheric Backgrounds */}
             <AnimatePresence>
-              {(isShuffling || isDealing || isInterpreting) && (
+              {(isDealing || isInterpreting) && (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -843,45 +841,15 @@ const TarotApp = () => {
 
             <div className="w-full h-full flex flex-wrap justify-center gap-6 sm:gap-10 tarot-card-container perspective-[2000px] relative z-10">
               <AnimatePresence mode="popLayout">
-                {isShuffling ? (
-                  <motion.div 
-                    key="shuffling-deck"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.1 }}
-                    className="flex items-center justify-center relative"
-                  >
-                    {[...Array(12)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ 
-                          x: [0, (i % 2 === 0 ? 50 : -50), 0],
-                          rotate: [i * 3, i * -3, i * 3],
-                          y: [0, (i < 6 ? -20 : 20), 0],
-                          z: [0, 100, 0],
-                          opacity: [0.4, 1, 0.4]
-                        }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          delay: i * 0.15,
-                          ease: "easeInOut"
-                        }}
-                        className="absolute w-28 sm:w-40 aspect-[2/3.4] bg-surface-container-highest rounded-sm border border-sepia shadow-2xl tarot-card-back mystic-glow"
-                      />
-                    ))}
-                    <div className="text-primary font-serif italic text-xl z-20 bg-surface-dim/90 px-10 py-4 rounded-full border-2 border-primary/30 backdrop-blur-md shadow-[0_0_30px_rgba(197,160,89,0.3)] ritual-text gold-text-gradient">
-                      {t('reading.status.shuffling')}
-                    </div>
-                  </motion.div>
-                ) : selectedCards.length > 0 ? (
+                {selectedCards.length > 0 ? (
                   <div className="relative w-full h-full flex items-center justify-center">
                     {/* Rotating Circle of Cards (Placeholders) during the dealing phase */}
-                    {isDealing && (
+                    {/* Ritual Circle - Shown while dealing or interpreting */}
+                    {(isDealing || (isInterpreting && !isReadingComplete)) && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
                         <motion.div 
                           animate={{ rotate: 720 }}
-                          transition={{ duration: 4, ease: "circOut" }}
+                          transition={{ duration: 20, ease: "linear", repeat: Infinity }}
                           className="relative w-80 h-80 sm:w-[600px] sm:h-[600px]"
                         >
                           {[...Array(24)].map((_, i) => (
@@ -892,13 +860,9 @@ const TarotApp = () => {
                             >
                               <motion.div 
                                 initial={{ scale: 0, opacity: 0 }}
-                                animate={{ 
-                                  scale: [0, 1, 1], 
-                                  opacity: [0, 0.6, 0.6],
-                                  y: [0, -200, -200] 
-                                }}
-                                transition={{ duration: 4, ease: "easeInOut" }}
-                                 className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back overflow-hidden relative"
+                                animate={{ scale: 1, opacity: 0.4, y: -220 }}
+                                transition={{ duration: 1, delay: i * 0.05 }}
+                                className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back overflow-hidden relative"
                               >
                                 <img src={CARD_IMAGES['card-back']} className="w-full h-full object-cover opacity-60" alt="card back" />
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
@@ -907,58 +871,31 @@ const TarotApp = () => {
                           ))}
                         </motion.div>
                         <div className="absolute z-20 ritual-text gold-text-gradient bg-surface-dim/80 px-8 py-3 rounded-full border border-primary/20 backdrop-blur-md animate-pulse">
-                          {t('reading.status.dealing')}
+                          {isDealing ? t('reading.status.dealing') : t('reading.analyzing')}
                         </div>
                       </div>
                     )}
 
                     <div className="relative w-full h-[500px] flex items-center justify-center overflow-visible">
-                      {selectedCards.map((card, idx) => {
+                      {!isDealing && selectedCards.map((card, idx) => {
                         const total = selectedCards.length;
-                        const angle = (idx / total) * (Math.PI * 2) - Math.PI / 2;
-                        const radius = Math.min(window.innerWidth * 0.35, 280);
-                        
-                        const ritualX = Math.cos(angle) * radius;
-                        const ritualY = Math.sin(angle) * radius;
-
-                        // Layout for final spread
-                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 100 : 160);
+                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 110 : 180);
 
                         return (
                           <motion.div
                             key={`${card.id}-${idx}`}
-                            initial={{ 
-                              opacity: 0, 
-                              x: 0,
-                              y: 200, 
-                              rotateY: 180, 
-                              z: -500,
-                              rotateX: 45,
-                              scale: 0.1
+                            initial={{ opacity: 0, y: 100, rotateY: 180, scale: 0.8 }}
+                            animate={{ 
+                               opacity: 1, 
+                               x: layoutX, 
+                               y: 0, 
+                               z: 0, 
+                               rotateY: 0, 
+                               rotateZ: card.isReversed ? 180 : 0, 
+                               scale: 1,
+                               rotateX: 0
                             }}
-                            animate={isReadingComplete || isInterpreting ? {
-                              x: layoutX, 
-                              y: 0, 
-                              z: 0, 
-                              rotateY: 0, 
-                              rotateZ: card.isReversed ? 180 : 0, 
-                              scale: 1, 
-                              opacity: 1,
-                              rotateX: 0
-                            } : { 
-                              opacity: 1, 
-                              x: isDealing ? [0, ritualX, ritualX] : ritualX,
-                              y: isDealing ? [0, ritualY, ritualY] : ritualY,
-                              z: -200,
-                              rotateY: 180,
-                              rotateZ: isDealing ? [0, (idx * 360) / total + 720, (idx * 360) / total + 1440] : (idx * 360) / total + 1440,
-                              rotateX: 45,
-                              scale: 0.5
-                            }}
-                            transition={{ 
-                              duration: isDealing ? 4 : 1.2,
-                              ease: "circOut"
-                            }}
+                            transition={{ duration: 0.6, delay: idx * 0.1, ease: "easeOut" }}
                             whileHover={{ 
                               scale: 1.05, 
                               y: -10,
@@ -971,8 +908,8 @@ const TarotApp = () => {
                             <div className="absolute -top-12 left-0 right-0 text-center w-full z-20">
                               <motion.span 
                                 initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: isReadingComplete || isInterpreting ? 1 : 0, y: isReadingComplete || isInterpreting ? 0 : 10 }}
-                                className="text-[9px] text-primary uppercase tracking-[4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text whitespace-nowrap"
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-[9px] text-primary uppercase font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text whitespace-nowrap"
                                 style={{ letterSpacing: '0.4em' }}
                               >
                                 {card.positionName}
