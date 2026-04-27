@@ -149,7 +149,7 @@ export function generateDeck(): TarotCard[] {
       id: `major-${i}`,
       name: { en: data.en, vi: data.vi },
       value: nameEn,
-      imageUrl: `./assets/cards/m${paddedIndex}.PNG`,
+      imageUrl: `/assets/cards/m${paddedIndex}.PNG`,
       meaning: {
         upright: data.meanU,
         reversed: data.meanR
@@ -213,7 +213,7 @@ export function generateDeck(): TarotCard[] {
         name: { en: `${val} of ${suit}`, vi: `${valueVietNamese[val]} ${minorVietNamese[suit]}` },
         suit,
         value: val,
-        imageUrl: `./assets/cards/${suitPrefixes[suit]}${valNum}.PNG`,
+        imageUrl: `/assets/cards/${suitPrefixes[suit]}${valNum}.PNG`,
         meaning: {
           upright: { 
             en: `${valMean.upright}: ${suitMean.upright.en}`, 
