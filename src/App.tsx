@@ -377,8 +377,8 @@ const TarotApp = () => {
     
     setSelectedCards(drawn);
     
-    // Phase 2: Dealing Delay (Total approx time based on card count)
-    await new Promise(resolve => setTimeout(resolve, drawn.length * 400 + 1000));
+    // Phase 2: Ritual Circle Animation (4 seconds)
+    await new Promise(resolve => setTimeout(resolve, 4000));
     setIsDealing(false);
 
     setInterpretation(t('reading.analyzing'));
@@ -388,29 +388,45 @@ const TarotApp = () => {
   const startInterpretation = async (cards: ReadingCard[]) => {
     setIsInterpreting(true);
     let fullText = '';
-    const stream = streamTarotInterpretation(
-      question || t('reading.question_placeholder'), 
-      activeSpread.name, 
-      cards, 
-      currentLang,
-      { model: aiSettings.model, apiKey: aiSettings.apiKey }
-    );
     
-    for await (const chunk of stream) {
-      fullText += chunk;
-      setInterpretation(fullText);
-    }
-    
-    setIsInterpreting(false);
-    setIsReadingComplete(true);
-    setIsInterpretationModalOpen(true);
-    
-    // Initialize chat session with the interpretation context
     try {
-      chatSessionRef.current = getChatSession(fullText, currentLang, { model: aiSettings.model, apiKey: aiSettings.apiKey });
-      setChatMessages([]);
-    } catch (e) {
-      console.error("Chat session init fail", e);
+      const stream = streamTarotInterpretation(
+        question || t('reading.question_placeholder'), 
+        activeSpread.name, 
+        cards, 
+        currentLang,
+        { model: aiSettings.model, apiKey: aiSettings.apiKey }
+      );
+      
+      for await (const chunk of stream) {
+        fullText += chunk;
+        setInterpretation(fullText);
+      }
+      
+      setIsReadingComplete(true);
+      setIsInterpretationModalOpen(true);
+      
+      // Initialize chat session with the interpretation context
+      try {
+        chatSessionRef.current = getChatSession(fullText, currentLang, { model: aiSettings.model, apiKey: aiSettings.apiKey });
+        setChatMessages([]);
+      } catch (e) {
+        console.error("Chat session init fail", e);
+      }
+    } catch (error) {
+      console.error('Interpretation failed:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes('API Key missing') || errorMsg.includes('403')) {
+        setInterpretation(currentLang === 'vi' 
+          ? '### Cần cấu nhập API Key\n\nĐể nhận lời giải từ Oracle trên Vercel, bạn cần thiết lập biến môi trường `VITE_GEMINI_API_KEY` trong Settings của Vercel project.' 
+          : '### API Key Required\n\nTo receive an interpretation from the Oracle on Vercel, you must set the `VITE_GEMINI_API_KEY` environment variable in your Vercel project settings.');
+        setIsReadingComplete(true);
+        setIsInterpretationModalOpen(true);
+      } else {
+        setInterpretation(currentLang === 'vi' ? 'Xin lỗi, Oracle đang tạm nghỉ. Vui lòng thử lại sau.' : 'Sorry, the Oracle is resting. Please try again later.');
+      }
+    } finally {
+      setIsInterpreting(false);
     }
   };
 
@@ -861,30 +877,32 @@ const TarotApp = () => {
                   <div className="relative w-full h-full flex items-center justify-center">
                     {/* Rotating Circle of Cards (Placeholders) during the dealing phase */}
                     {isDealing && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
                         <motion.div 
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                          className="relative w-72 h-72 sm:w-96 sm:h-96"
+                          animate={{ rotate: 720 }}
+                          transition={{ duration: 4, ease: "easeInOut" }}
+                          className="relative w-80 h-80 sm:w-[500px] sm:h-[500px]"
                         >
-                          {[...Array(12)].map((_, i) => (
+                          {[...Array(24)].map((_, i) => (
                             <div 
                               key={`ritual-circle-${i}`}
                               className="absolute inset-0 flex items-center justify-center"
-                              style={{ transform: `rotate(${(i * 360) / 12}deg)` }}
+                              style={{ transform: `rotate(${(i * 360) / 24}deg)` }}
                             >
                               <motion.div 
                                 initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 0.3 }}
-                                exit={{ scale: 0, opacity: 0 }}
-                                className="w-16 h-28 sm:w-20 sm:h-32 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl -translate-y-[150px] sm:-translate-y-[200px]"
-                                style={{ transformOrigin: 'center center' }}
+                                animate={{ scale: [0, 1, 1, 0.5], opacity: [0, 0.4, 0.4, 0] }}
+                                transition={{ duration: 4, ease: "easeInOut" }}
+                                className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl -translate-y-[180px] sm:-translate-y-[240px] tarot-card-back"
                               >
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
                               </motion.div>
                             </div>
                           ))}
                         </motion.div>
+                        <div className="absolute z-20 ritual-text gold-text-gradient bg-surface-dim/80 px-8 py-3 rounded-full border border-primary/20 backdrop-blur-md">
+                          {t('reading.status.dealing')}
+                        </div>
                       </div>
                     )}
 
@@ -911,20 +929,20 @@ const TarotApp = () => {
                               rotateZ: (idx * 360) / total,
                               scale: 0.2
                             }}
-                            animate={{ 
+                            animate={isReadingComplete && !isDealing ? {
+                              x: 0, y: 0, z: 0, rotateY: 0, rotateZ: card.isReversed ? 180 : 0, scale: 1, opacity: 1
+                            } : { 
                               opacity: 1, 
-                              x: [circleX, circleX, 0],
-                              y: [circleY, circleY, 0],
-                              z: [-500, 200, 0],
-                              rotateY: [180, 180, 0], 
-                              rotateZ: [ (idx * 360) / total, (idx * 360) / total + 720, card.isReversed ? 1260 : 1080],
+                              x: isDealing ? circleX : [circleX, circleX, 0],
+                              y: isDealing ? circleY : [circleY, circleY, 0],
+                              z: isDealing ? -200 : [-500, 200, 0],
+                              rotateY: 180,
+                              rotateZ: isDealing ? (idx * 360) / total + 720 : [(idx * 360) / total + 720, (idx * 360) / total + 1080, card.isReversed ? 1260 : 1080],
                               rotateX: [45, 0, 0],
-                              scale: [0.2, 1.2, 1],
+                              scale: isDealing ? 0.3 : [0.3, 1.2, 1],
                             }}
                             transition={{ 
-                              duration: 3,
-                              delay: idx * 0.2, 
-                              times: [0, 0.5, 1],
+                              duration: isDealing ? 4 : 2.5,
                               ease: "easeInOut"
                             }}
                             whileHover={{ 
@@ -964,11 +982,14 @@ const TarotApp = () => {
                                 <img 
                                   src={card.imageUrl} 
                                   alt={card.name[currentLang]} 
-                                  referrerPolicy="no-referrer"
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover shadow-inner"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = "https://images.unsplash.com/photo-1601024445121-e5b82f12d3f0?auto=format&fit=crop&q=80&w=400"; // Fallback aesthetic tarot image
+                                  }}
                                 />
-                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
-                                   <p className="text-[8px] text-white/80 font-serif italic text-center truncate">{card.name[currentLang]}</p>
+                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                                   <p className="text-[9px] text-primary-fixed font-serif italic text-center truncate tracking-wider gold-text-gradient">{card.name[currentLang]}</p>
                                 </div>
                               </div>
                               
@@ -1206,7 +1227,14 @@ const TarotApp = () => {
                       <div className="mt-12 pt-8 border-t border-primary/5 grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {selectedCards.map((card, idx) => (
                            <div key={idx} className="flex gap-3 items-center opacity-60 hover:opacity-100 transition-opacity">
-                             <img src={card.imageUrl} className={`w-8 h-12 object-cover rounded shadow-md ${card.isReversed ? 'rotate-180' : ''}`} />
+                             <img 
+                               src={card.imageUrl} 
+                               className={`w-8 h-12 object-cover rounded shadow-md ${card.isReversed ? 'rotate-180' : ''}`} 
+                               onError={(e) => {
+                                 const target = e.target as HTMLImageElement;
+                                 target.src = "https://images.unsplash.com/photo-1601024445121-e5b82f12d3f0?auto=format&fit=crop&q=80&w=100";
+                               }}
+                             />
                              <div className="min-w-0">
                                <p className="text-[9px] text-primary font-bold truncate uppercase">{card.positionName}</p>
                                <p className="text-[11px] text-secondary font-serif italic truncate">{card.name[currentLang as 'vi' | 'en']}</p>
