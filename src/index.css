@@ -1,0 +1,304 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "IBM Plex Serif", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-surface-dim: #161712;
+  --color-surface-container-low: #1b1c16;
+  --color-surface-container: #1f201a;
+  --color-surface-container-high: #24261e;
+  --color-surface-container-highest: #282a21;
+  
+  --color-primary: #c5a059;
+  --color-primary-container: #5c4b2c;
+  --color-secondary: #e0e0d5;
+  --color-secondary-container: #2d2d24;
+  
+  --color-outline: #a0a090;
+}
+
+@layer base {
+  body {
+    @apply bg-surface-dim text-secondary font-sans antialiased selection:bg-primary/20;
+    overflow: hidden;
+  }
+}
+
+.custom-scrollbar {
+  scrollbar-gutter: stable;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tarot-card-back {
+  background-color: #0b0e14;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(197, 160, 89, 0.1) 0%, transparent 70%),
+    url('/assets/back/card-back.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.tarot-card-back::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  pointer-events: none;
+}
+
+.tarot-card-back::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.1) 0%, transparent 50%, rgba(197, 160, 89, 0.1) 100%);
+  pointer-events: none;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+.glass-morphism {
+  @apply bg-surface-container/80 border border-primary/20;
+}
+
+.card-glow {
+  box-shadow: 0 10px 40px -15px rgba(197, 160, 89, 0.4);
+}
+
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(197, 160, 89, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(197, 160, 89, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(22, 23, 18, 0.8) 0%, transparent 100%);
+  animation: rotate-atmosphere 20s linear infinite;
+  filter: blur(40px);
+}
+
+.stars-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at center, #11120d 0%, #080905 100%);
+}
+
+.parallax-layer {
+  position: absolute;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  will-change: transform;
+}
+
+.nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  mix-blend-mode: screen;
+  animation: nebula-pulse var(--duration) ease-in-out infinite alternate;
+  opacity: 0.12;
+}
+
+@keyframes nebula-pulse {
+  from { transform: scale(1) translate(0, 0); opacity: 0.08; }
+  to { transform: scale(1.3) translate(20px, 15px); opacity: 0.15; }
+}
+
+.galaxy {
+  position: absolute;
+  width: 100vw;
+  height: 100vw;
+  background: radial-gradient(circle at center, rgba(197, 160, 89, 0.08) 0%, transparent 70%);
+  filter: blur(80px);
+  animation: galaxy-rotate var(--duration) linear infinite, galaxy-color 35s ease-in-out infinite alternate;
+  opacity: 0.3;
+}
+
+@keyframes galaxy-color {
+  0% { filter: blur(80px) hue-rotate(0deg); }
+  100% { filter: blur(110px) hue-rotate(40deg); }
+}
+
+@keyframes galaxy-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  to { transform: translate(-50%, -50%) rotate(360deg) scale(1.15); }
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: sparkle-star var(--duration) linear infinite;
+  animation-delay: var(--delay);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  will-change: opacity, transform;
+}
+
+@keyframes sparkle-star {
+  0%, 100% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: var(--opacity); transform: scale(1.2); }
+}
+
+.shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+  border-radius: 50%;
+  filter: drop-shadow(0 0 6px white);
+  opacity: 0;
+  animation: shooting-star-anim var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes shooting-star-anim {
+  0% { transform: translateX(0) translateY(0) rotate(-45deg) scale(0); opacity: 0; }
+  5% { transform: translateX(0) translateY(0) rotate(-45deg) scale(1); opacity: 1; }
+  15% { transform: translateX(400px) translateY(400px) rotate(-45deg) scale(0); opacity: 0; }
+  100% { transform: translateX(400px) translateY(400px) rotate(-45deg) scale(0); opacity: 0; }
+}
+
+.cosmic-dust {
+  position: absolute;
+  inset: -100%;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, rgba(243, 229, 171, 0.15), transparent),
+    radial-gradient(1.5px 1.5px at 100px 150px, rgba(197, 160, 89, 0.1), transparent),
+    radial-gradient(1px 1px at 200px 50px, rgba(255, 255, 255, 0.15), transparent);
+  background-repeat: repeat;
+  background-size: 400px 400px;
+  animation: cosmic-drift 200s linear infinite;
+  opacity: 0.2;
+}
+
+@keyframes cosmic-drift {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to { transform: translate(-5%, -5%) rotate(360deg); }
+}
+
+@keyframes rotate-atmosphere {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.mystic-glow {
+  filter: drop-shadow(0 0 8px rgba(197, 160, 89, 0.4));
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.sparkle-slow {
+  animation: sparkle 4s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.tarot-card-container {
+  perspective: 2000px;
+}
+
+/* Card Shine Effect */
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -110%;
+  left: -210%;
+  width: 200%;
+  height: 200%;
+  opacity: 0;
+  transform: rotate(30deg);
+  background: rgba(255, 255, 255, 0.13);
+  background: linear-gradient(
+    to right, 
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.13) 77%,
+    rgba(255, 255, 255, 0.5) 92%,
+    rgba(255, 255, 255, 0.0) 100%
+  );
+  transition: all 0.7s blur;
+}
+
+.group:hover .card-shine::after {
+  opacity: 1;
+  top: -30%;
+  left: -30%;
+  transition-property: left, top, opacity;
+  transition-duration: 0.7s, 0.7s, 0.15s;
+  transition-timing-function: ease;
+}
+
+.ritual-text {
+  text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
+  letter-spacing: 0.4em;
+}
+
+.card-glow-refined {
+  box-shadow: 0 0 20px -5px rgba(197, 160, 89, 0.3);
+  opacity: 0.6;
+}
+
+.group:hover .card-glow-refined {
+  box-shadow: 0 0 40px -2px rgba(197, 160, 89, 0.5);
+  opacity: 1;
+}
+
+.constellation-line {
+  stroke: rgba(197, 160, 89, 0.15);
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-constellation 10s ease-in-out infinite;
+}
+
+@keyframes draw-constellation {
+  0%, 100% { stroke-dashoffset: 1000; opacity: 0; }
+  50% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.gold-text-gradient {
+  background: linear-gradient(to bottom, #f3e5ab 0%, #c5a059 50%, #8b6e37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
