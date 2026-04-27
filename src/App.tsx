@@ -880,8 +880,8 @@ const TarotApp = () => {
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
                         <motion.div 
                           animate={{ rotate: 720 }}
-                          transition={{ duration: 4, ease: "easeInOut" }}
-                          className="relative w-80 h-80 sm:w-[500px] sm:h-[500px]"
+                          transition={{ duration: 4, ease: "circOut" }}
+                          className="relative w-80 h-80 sm:w-[600px] sm:h-[600px]"
                         >
                           {[...Array(24)].map((_, i) => (
                             <div 
@@ -891,85 +891,94 @@ const TarotApp = () => {
                             >
                               <motion.div 
                                 initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: [0, 1, 1, 0.5], opacity: [0, 0.4, 0.4, 0] }}
+                                animate={{ 
+                                  scale: [0, 1, 1], 
+                                  opacity: [0, 0.6, 0.6],
+                                  y: [0, -200, -200] 
+                                }}
                                 transition={{ duration: 4, ease: "easeInOut" }}
-                                className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl -translate-y-[180px] sm:-translate-y-[240px] tarot-card-back"
+                                className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back"
                               >
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
                               </motion.div>
                             </div>
                           ))}
                         </motion.div>
-                        <div className="absolute z-20 ritual-text gold-text-gradient bg-surface-dim/80 px-8 py-3 rounded-full border border-primary/20 backdrop-blur-md">
+                        <div className="absolute z-20 ritual-text gold-text-gradient bg-surface-dim/80 px-8 py-3 rounded-full border border-primary/20 backdrop-blur-md animate-pulse">
                           {t('reading.status.dealing')}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex flex-wrap justify-center gap-8 sm:gap-16 items-center px-4 relative z-10">
+                    <div className="relative w-full min-h-[400px] flex items-center justify-center">
                       {selectedCards.map((card, idx) => {
                         const total = selectedCards.length;
                         const angle = (idx / total) * (Math.PI * 2) - Math.PI / 2;
-                        const radius = 220;
+                        const radius = 250;
                         
-                        // Circle phase coordinates
-                        const circleX = Math.cos(angle) * radius;
-                        const circleY = Math.sin(angle) * radius;
+                        // Ritual phase coordinates (centered)
+                        const ritualX = Math.cos(angle) * radius;
+                        const ritualY = Math.sin(angle) * radius;
+
+                        // Calculation for landing in a "grid-like" layout if needed
+                        // But let's stick to a clean spread
+                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 120 : 180);
 
                         return (
                           <motion.div
                             key={`${card.id}-${idx}`}
                             initial={{ 
                               opacity: 0, 
-                              x: circleX,
-                              y: circleY, 
+                              x: visualViewport?.width ? visualViewport.width : 0,
+                              y: 500, 
                               rotateY: 180, 
-                              z: -500,
+                              z: -1000,
                               rotateX: 45,
-                              rotateZ: (idx * 360) / total,
-                              scale: 0.2
+                              rotateZ: 0,
+                              scale: 0.1
                             }}
-                            animate={isReadingComplete && !isDealing ? {
-                              x: 0, y: 0, z: 0, rotateY: 0, rotateZ: card.isReversed ? 180 : 0, scale: 1, opacity: 1
+                            animate={isReadingComplete || isInterpreting ? {
+                              x: layoutX, 
+                              y: 0, 
+                              z: 0, 
+                              rotateY: 0, 
+                              rotateZ: card.isReversed ? 180 : 0, 
+                              scale: 1, 
+                              opacity: 1,
+                              rotateX: 0
                             } : { 
                               opacity: 1, 
-                              x: isDealing ? circleX : [circleX, circleX, 0],
-                              y: isDealing ? circleY : [circleY, circleY, 0],
-                              z: isDealing ? -200 : [-500, 200, 0],
+                              x: [0, ritualX, ritualX],
+                              y: [0, ritualY, ritualY],
+                              z: [-500, -200, -200],
                               rotateY: 180,
-                              rotateZ: isDealing ? (idx * 360) / total + 720 : [(idx * 360) / total + 720, (idx * 360) / total + 1080, card.isReversed ? 1260 : 1080],
-                              rotateX: [45, 0, 0],
-                              scale: isDealing ? 0.3 : [0.3, 1.2, 1],
+                              rotateZ: [0, (idx * 360) / total + 720, (idx * 360) / total + 1440],
+                              rotateX: 45,
+                              scale: 0.4
                             }}
                             transition={{ 
-                              duration: isDealing ? 4 : 2.5,
-                              ease: "easeInOut"
+                              duration: isDealing ? 4 : 2,
+                              ease: "circOut"
                             }}
                             whileHover={{ 
-                              scale: 1.08, 
-                              y: -15,
-                              z: 100,
-                              rotateX: -5,
-                              transition: { type: "spring", stiffness: 400, damping: 25 }
+                              scale: 1.05, 
+                              y: -10,
+                              z: 50,
+                              transition: { type: "spring", stiffness: 300, damping: 20 }
                             }}
                             onClick={() => isReadingComplete && setIsInterpretationModalOpen(true)}
-                            className={cn(
-                              "relative group preserve-3d cursor-pointer float-animation",
-                              idx % 3 === 0 ? "animation-delay-0" : idx % 3 === 1 ? "animation-delay-2000" : "animation-delay-4000"
-                            )}
-                            style={{ animationDelay: `${idx * 0.8}s` }}
+                            className="absolute cursor-pointer preserve-3d"
                           >
-                            <div className="absolute -top-12 left-0 right-0 text-center">
+                            <div className="absolute -top-12 left-0 right-0 text-center w-full">
                               <motion.span 
                                 initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.2 + 2.8 }}
-                                className="text-[9px] text-primary uppercase tracking-[0.4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text"
+                                animate={{ opacity: isReadingComplete || isInterpreting ? 1 : 0, y: isReadingComplete || isInterpreting ? 0 : 10 }}
+                                transition={{ delay: 0.5 }}
+                                className="text-[9px] text-primary uppercase tracking-[0.4em] font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text whitespace-nowrap"
                               >
                                 {card.positionName}
                               </motion.span>
                             </div>
-                            {/* Refined container to prevent shadow bleed/surplus */}
                             <div className="w-28 sm:w-40 aspect-[2/3.4] relative preserve-3d transition-transform duration-1000 group-hover:rotate-y-12">
                               <div className="absolute inset-0 rounded-sm card-glow-refined pointer-events-none" />
                               <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none -z-10" />
@@ -985,7 +994,7 @@ const TarotApp = () => {
                                   className="w-full h-full object-cover shadow-inner"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = "https://images.unsplash.com/photo-1601024445121-e5b82f12d3f0?auto=format&fit=crop&q=80&w=400"; // Fallback aesthetic tarot image
+                                    target.src = "https://placehold.co/400x600/1a1a1a/c5a059?text=Tarot+Card"; 
                                   }}
                                 />
                                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
@@ -1232,7 +1241,7 @@ const TarotApp = () => {
                                className={`w-8 h-12 object-cover rounded shadow-md ${card.isReversed ? 'rotate-180' : ''}`} 
                                onError={(e) => {
                                  const target = e.target as HTMLImageElement;
-                                 target.src = "https://images.unsplash.com/photo-1601024445121-e5b82f12d3f0?auto=format&fit=crop&q=80&w=100";
+                                 target.src = "https://placehold.co/100x150/1a1a1a/c5a059?text=Tarot";
                                }}
                              />
                              <div className="min-w-0">
