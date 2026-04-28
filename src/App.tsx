@@ -214,40 +214,40 @@ const JourneyInput = ({ question, setQuestion, onAsk, onDraw, currentLang, t }: 
     >
       <div className="absolute inset-0 atmosphere opacity-20 pointer-events-none" />
       
-      <div className="text-center group relative z-10 w-full">
-        <span className="text-[10px] uppercase tracking-[0.5em] text-primary font-bold mb-4 block ritual-text">
-          {currentLang === 'vi' ? 'HÀNH TRÌNH TÂM LINH' : 'SPIRITUAL JOURNEY'}
+      <div className="text-center group relative z-10 w-full px-2">
+        <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary font-bold mb-2 sm:mb-4 block ritual-text">
+          {t('reading.spiritual_journey')}
         </span>
-        <h3 className="text-2xl sm:text-4xl font-serif italic text-secondary mb-10 leading-tight gold-text-gradient ritual-text">
-          {currentLang === 'vi' ? 'Điều gì đang dẫn lối bước chân bạn?' : 'What is guiding your path today?'}
+        <h3 className="text-lg sm:text-4xl font-serif italic text-secondary mb-6 sm:mb-10 leading-tight gold-text-gradient ritual-text">
+          {t('reading.guiding_path')}
         </h3>
         
-        <div className="relative w-full mb-12">
+        <div className="relative w-full mb-8 sm:mb-12">
           <input 
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="..."
-            className="w-full bg-surface-container/60 border-b-2 border-primary/20 p-6 text-center text-secondary font-serif italic text-xl focus:border-primary outline-none transition-all placeholder:opacity-20 backdrop-blur-sm rounded-t-2xl"
+            className="w-full bg-surface-container/60 border-b-2 border-primary/20 p-3 sm:p-6 text-center text-secondary font-serif italic text-base sm:text-xl focus:border-primary outline-none transition-all placeholder:opacity-20 backdrop-blur-sm rounded-t-2xl"
           />
           <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full">
           <button 
             onClick={onDraw}
-            className="w-full sm:w-auto relative px-12 py-5 bg-surface-container/90 border-2 border-primary/40 rounded-full text-primary font-serif italic text-xl shadow-2xl hover:scale-105 active:scale-95 hover:border-primary transition-all flex items-center justify-center gap-4 backdrop-blur-xl group cursor-pointer"
+            className="w-full sm:w-auto relative px-6 sm:px-12 py-3 sm:py-5 bg-surface-container/90 border-2 border-primary/40 rounded-full text-primary font-serif italic text-base sm:text-xl shadow-2xl hover:scale-105 active:scale-95 hover:border-primary transition-all flex items-center justify-center gap-2 sm:gap-4 backdrop-blur-xl group cursor-pointer"
           >
-            <Sparkles className="w-6 h-6 animate-pulse" />
-            <span className="relative z-10 font-bold tracking-wider">{t('reading.draw_button')}</span>
+            <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 animate-pulse" />
+            <span className="relative z-10 font-bold tracking-wider text-sm sm:text-base">{t('reading.draw_button')}</span>
           </button>
 
           <button 
             onClick={onAsk}
-            className="w-full sm:w-auto relative px-12 py-5 bg-primary text-surface-dim rounded-full font-serif italic text-xl shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group cursor-pointer"
+            className="w-full sm:w-auto relative px-6 sm:px-12 py-3 sm:py-5 bg-primary text-surface-dim rounded-full font-serif italic text-base sm:text-xl shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 sm:gap-4 group cursor-pointer"
           >
-            <PenTool className="w-6 h-6" />
-            <span className="relative z-10 font-bold tracking-wider">{t('reading.ask')}</span>
+            <PenTool className="w-4 h-4 sm:w-6 sm:h-6" />
+            <span className="relative z-10 font-bold tracking-wider text-sm sm:text-base">{t('reading.ask')}</span>
           </button>
         </div>
       </div>
@@ -282,6 +282,28 @@ const TarotApp = () => {
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
   const chatSessionRef = useRef<any>(null);
+
+  // Audio refs for mystical feedback
+  const shuffleSound = useRef<HTMLAudioElement | null>(null);
+  const cardFlickSound = useRef<HTMLAudioElement | null>(null);
+  const oracleHumSound = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    shuffleSound.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2364/2364-preview.mp3'); // Mystical shimmer/ritual
+    cardFlickSound.current = new Audio('https://assets.mixkit.co/active_storage/sfx/611/611-preview.mp3'); // Magic appear/deal
+    oracleHumSound.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'); // Deep mystic resonance/AI
+    
+    if (shuffleSound.current) shuffleSound.current.volume = 0.2;
+    if (cardFlickSound.current) cardFlickSound.current.volume = 0.3;
+    if (oracleHumSound.current) oracleHumSound.current.volume = 0.15;
+  }, []);
+
+  const playSound = (sound: React.RefObject<HTMLAudioElement | null>) => {
+    if (sound && sound.current) {
+      sound.current.currentTime = 0;
+      sound.current.play().catch(() => {}); // Catch browser auto-play blocks
+    }
+  };
   
   const [aiSettings, setAiSettings] = useState(() => {
     const saved = localStorage.getItem('astra_oracle_settings');
@@ -359,6 +381,7 @@ const TarotApp = () => {
     
     // Skip Shuffling, go straight to Dealing
     setIsDealing(true);
+    playSound(shuffleSound);
 
     const drawn: ReadingCard[] = [];
     const currentDeck = shuffleDeck(generateDeck());
@@ -377,11 +400,13 @@ const TarotApp = () => {
     // Ritual Circle Animation (4 seconds)
     await new Promise(resolve => setTimeout(resolve, 4000));
     setIsDealing(false);
+    playSound(cardFlickSound);
 
     // Pause to allow cards to land and be seen before AI interpretation starts
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     setInterpretation(t('reading.analyzing'));
+    playSound(oracleHumSound);
     startInterpretation(drawn);
   };
 
@@ -417,13 +442,11 @@ const TarotApp = () => {
       console.error('Interpretation failed:', error);
       const errorMsg = error instanceof Error ? error.message : String(error);
       if (errorMsg.includes('API Key missing') || errorMsg.includes('403')) {
-        setInterpretation(currentLang === 'vi' 
-          ? '### Cần cấu nhập API Key\n\nĐể nhận lời giải từ Oracle trên Vercel, bạn cần thiết lập biến môi trường `VITE_GEMINI_API_KEY` trong Settings của Vercel project.' 
-          : '### API Key Required\n\nTo receive an interpretation from the Oracle on Vercel, you must set the `VITE_GEMINI_API_KEY` environment variable in your Vercel project settings.');
+        setInterpretation(t('reading.api_key_required', { defaultValue: 'API Key Required' }));
         setIsReadingComplete(true);
         setIsInterpretationModalOpen(true);
       } else {
-        setInterpretation(currentLang === 'vi' ? 'Xin lỗi, Oracle đang tạm nghỉ. Vui lòng thử lại sau.' : 'Sorry, the Oracle is resting. Please try again later.');
+        setInterpretation(t('reading.error_resting'));
       }
     } finally {
       setIsInterpreting(false);
@@ -446,7 +469,7 @@ const TarotApp = () => {
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setChatMessages(prev => [...prev, { role: 'model', content: currentLang === 'vi' ? "Rất tiếc, đã có lỗi khi kết nối với Oracle." : "Sorry, I encountered an error connecting to the Oracle." }]);
+      setChatMessages(prev => [...prev, { role: 'model', content: t('chat.error') }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -516,7 +539,7 @@ const TarotApp = () => {
               onClick={() => i18n.changeLanguage('en')}
               className={cn(
                 "px-2 py-0.5 rounded-full text-[8px] font-bold transition-all",
-                currentLang === 'en' ? "bg-primary text-white" : "text-outline"
+                i18n.language.startsWith('en') ? "bg-primary text-white" : "text-outline"
               )}
             >
               EN
@@ -525,7 +548,7 @@ const TarotApp = () => {
               onClick={() => i18n.changeLanguage('vi')}
               className={cn(
                 "px-2 py-0.5 rounded-full text-[8px] font-bold transition-all",
-                currentLang === 'vi' ? "bg-primary text-white" : "text-outline"
+                i18n.language.startsWith('vi') ? "bg-primary text-white" : "text-outline"
               )}
             >
               VI
@@ -632,10 +655,10 @@ const TarotApp = () => {
             <button 
               onClick={() => setIsGuideOpen(true)}
               className="flex items-center gap-4 px-3 py-3 text-outline hover:text-secondary group transition-colors"
-              title={currentLang === 'vi' ? 'Hướng dẫn' : 'Guide'}
+              title={t('nav.guide')}
             >
               <Info className="w-5 h-5 flex-shrink-0" />
-              {!isSidebarCollapsed && <span className="text-xs uppercase tracking-tighter whitespace-nowrap">{currentLang === 'vi' ? 'Hướng dẫn' : 'Guide'}</span>}
+              {!isSidebarCollapsed && <span className="text-xs uppercase tracking-tighter whitespace-nowrap">{t('nav.guide')}</span>}
             </button>
             <button 
               onClick={() => setIsSettingsOpen(true)}
@@ -738,7 +761,7 @@ const TarotApp = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center p-6 z-[100] bg-surface-dim/70 backdrop-blur-md"
+              className="xl:col-span-12 flex items-center justify-center py-6 sm:py-12 px-4 z-20"
             >
               <JourneyInput 
                 question={question} 
@@ -792,8 +815,8 @@ const TarotApp = () => {
           </motion.button>
         </div>
 
-        <div className="xl:col-span-12 flex justify-between items-center mb-4 border-b border-sepia pb-4">
-           <div className="flex gap-6 text-[10px] uppercase tracking-widest text-outline">
+        <div className="xl:col-span-12 flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-sepia pb-4">
+           <div className="flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 text-[9px] sm:text-[10px] uppercase tracking-widest text-outline">
               <div>{t('reading.status.spread')}: <span className="text-primary font-bold">{currentLang === 'vi' ? activeSpread.nameVi : activeSpread.name}</span></div>
               <div>{t('reading.status.phase')}: <span className="text-primary font-bold">
                  {isDealing ? t('reading.status.dealing', { defaultValue: 'Dealing...' }) :
@@ -802,12 +825,12 @@ const TarotApp = () => {
               </span></div>
            </div>
            <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => { setSelectedCards([]); setInterpretation(''); setIsReadingComplete(false); }} title={t('reading.reset')}><RefreshCcw className="w-3 h-3"/></Button>
+              <Button variant="ghost" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => { setSelectedCards([]); setInterpretation(''); setIsReadingComplete(false); }} title={t('reading.reset')}><RefreshCcw className="w-3 h-3"/></Button>
            </div>
         </div>
 
-        <div className="xl:col-span-12 flex flex-col gap-6">
-          <div className="relative min-h-[600px] bg-surface-container-low/20 rounded-md p-8 flex flex-col items-center justify-center overflow-hidden border border-sepia">
+        <div className="xl:col-span-12 flex flex-col gap-4 sm:gap-6">
+          <div className="relative min-h-[500px] sm:min-h-[600px] bg-surface-container-low/20 rounded-md p-4 sm:p-8 flex flex-col items-center justify-center overflow-hidden border border-sepia">
             
             {/* Atmospheric Backgrounds */}
             <AnimatePresence>
@@ -821,8 +844,8 @@ const TarotApp = () => {
               )}
             </AnimatePresence>
 
-            <div className="text-center mb-16 opacity-80 uppercase tracking-[0.3em] relative z-10">
-              <h1 className="text-2xl sm:text-3xl font-serif italic text-secondary mb-3 ritual-text gold-text-gradient">{currentLang === 'vi' ? activeSpread.nameVi : activeSpread.name}</h1>
+            <div className="text-center mb-8 sm:mb-16 opacity-80 uppercase tracking-[0.3em] relative z-10">
+              <h1 className="text-xl sm:text-3xl font-serif italic text-secondary mb-3 ritual-text gold-text-gradient">{currentLang === 'vi' ? activeSpread.nameVi : activeSpread.name}</h1>
               <div className="h-0.5 w-12 bg-primary/40 mx-auto mystic-glow" />
               
               {/* Confirmed Journey Text */}
@@ -850,7 +873,7 @@ const TarotApp = () => {
                         <motion.div 
                           animate={{ rotate: 720 }}
                           transition={{ duration: 20, ease: "linear", repeat: Infinity }}
-                          className="relative w-80 h-80 sm:w-[600px] sm:h-[600px]"
+                          className="relative w-64 h-64 sm:w-[600px] sm:h-[600px]"
                         >
                           {[...Array(24)].map((_, i) => (
                             <div 
@@ -860,9 +883,9 @@ const TarotApp = () => {
                             >
                               <motion.div 
                                 initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 0.4, y: -220 }}
+                                animate={{ scale: 1, opacity: 0.4, y: window.innerWidth < 640 ? -110 : -220 }}
                                 transition={{ duration: 1, delay: i * 0.05 }}
-                                className="w-16 h-28 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back overflow-hidden relative"
+                                className="w-10 h-16 sm:w-24 sm:h-40 bg-surface-container-highest border border-primary/20 rounded-sm shadow-2xl tarot-card-back overflow-hidden relative"
                               >
                                 <img src={CARD_IMAGES['card-back']} className="w-full h-full object-cover opacity-60" alt="card back" />
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
@@ -879,7 +902,7 @@ const TarotApp = () => {
                     <div className="relative w-full h-[500px] flex items-center justify-center overflow-visible">
                       {!isDealing && selectedCards.map((card, idx) => {
                         const total = selectedCards.length;
-                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 110 : 180);
+                        const layoutX = (idx - (total - 1) / 2) * (window.innerWidth < 640 ? 100 : 180);
 
                         return (
                           <motion.div
@@ -891,7 +914,6 @@ const TarotApp = () => {
                                y: 0, 
                                z: 0, 
                                rotateY: 0, 
-                               rotateZ: card.isReversed ? 180 : 0, 
                                scale: 1,
                                rotateX: 0
                             }}
@@ -905,18 +927,24 @@ const TarotApp = () => {
                             onClick={() => isReadingComplete && setIsInterpretationModalOpen(true)}
                             className="absolute cursor-pointer preserve-3d"
                           >
-                            <div className="absolute -top-12 left-0 right-0 text-center w-full z-20">
+                            <motion.div 
+                              className="absolute -top-16 left-1/2 -translate-x-1/2 flex justify-center w-max z-20 pointer-events-none"
+                            >
                               <motion.span 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="text-[9px] text-primary uppercase font-medium bg-surface-dim/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/30 shadow-lg ritual-text whitespace-nowrap"
+                                className="text-[10px] text-primary uppercase font-bold bg-surface-dim/95 backdrop-blur-md px-5 py-2 rounded-full border border-primary/30 shadow-[0_0_15px_rgba(197,160,89,0.2)] ritual-text whitespace-nowrap"
                                 style={{ letterSpacing: '0.4em' }}
                               >
                                 {card.positionName}
                               </motion.span>
-                            </div>
+                            </motion.div>
                             
-                            <div className="w-24 sm:w-36 aspect-[2/3.4] relative preserve-3d transition-transform duration-1000 group">
+                            <motion.div 
+                              animate={{ rotateZ: card.isReversed ? 180 : 0 }}
+                              transition={{ duration: 0.6 }}
+                              className="w-24 sm:w-36 aspect-[2/3.4] relative preserve-3d group"
+                            >
                               <div className="absolute inset-0 rounded-sm card-glow-refined pointer-events-none" />
                               <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none -z-10" />
                               
@@ -941,7 +969,7 @@ const TarotApp = () => {
                                 <img src={CARD_IMAGES['card-back']} className="w-full h-full object-cover" alt="card back" />
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20" />
                               </div>
-                            </div>
+                            </motion.div>
                           </motion.div>
                         );
                       })}
@@ -1125,30 +1153,31 @@ const TarotApp = () => {
                   <div className="absolute inset-0 atmosphere opacity-5 pointer-events-none" />
                   
                   {/* Compact Header */}
-                  <div className="flex justify-between items-center p-6 border-b border-primary/10 relative z-10 bg-surface-container/40">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/20 rounded-lg">
-                        <Sparkles className="w-5 h-5 text-primary" />
+                  <div className="flex items-center justify-between p-3 sm:p-6 border-b border-primary/10 relative z-10 bg-surface-container/40 gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="p-1.5 sm:p-2 bg-primary/20 rounded-lg hidden xs:block">
+                        <Sparkles className="w-4 h-4 sm:w-5 h-5 text-primary" />
                       </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-serif italic text-secondary leading-none">{t('reading.oracle_interpretation')}</h2>
-                        <p className="text-[10px] text-primary/60 font-bold uppercase tracking-[0.2em] mt-1">{t('reading.insight_title')}</p>
+                      <div className="min-w-0">
+                        <h2 className="text-sm sm:text-2xl font-serif italic text-secondary leading-tight truncate sm:whitespace-normal">{t('reading.oracle_interpretation')}</h2>
+                        <p className="text-[7px] sm:text-[10px] text-primary/60 font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] mt-0.5">{t('reading.insight_title')}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                       <Button 
                         onClick={saveToHistory} 
                         variant="primary" 
-                        className="px-6 py-2 rounded-full flex items-center gap-2 text-sm shadow-lg whitespace-nowrap"
+                        className="px-3 sm:px-4 py-1.5 rounded-full flex items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-sm shadow-lg whitespace-nowrap"
                       >
-                        <Save className="w-4 h-4" />
-                        {currentLang === 'vi' ? 'Lưu nhật ký' : 'Save Journal'}
+                        <Save className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden xs:inline">{t('reading.journal_entry')}</span>
+                        <span className="xs:hidden">{t('reading.journal_entry').split(' ').pop()}</span>
                       </Button>
                       <button 
                         onClick={() => setIsInterpretationModalOpen(false)}
-                        className="p-2 text-primary/60 hover:text-primary transition-all hover:bg-primary/10 rounded-full"
+                        className="p-1 sm:p-1.5 text-primary/60 hover:text-primary transition-all hover:bg-primary/10 rounded-full"
                       >
-                        <X className="w-6 h-6" />
+                        <X className="w-4 h-4 sm:w-6 sm:h-6" />
                       </button>
                     </div>
                   </div>
@@ -1294,10 +1323,8 @@ const TarotApp = () => {
                     className="w-full bg-surface-dim border border-sepia p-3 text-secondary focus:border-primary outline-none transition-all rounded-xs"
                   >
                     <option value="gemini-3-flash-preview">Gemini 3 Flash (Fast)</option>
-                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (Deep insight)</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-outline mb-2 block">API Key (Optional)</label>
                   <input 
@@ -1308,9 +1335,7 @@ const TarotApp = () => {
                     className="w-full bg-surface-dim border border-sepia p-3 text-secondary focus:border-primary outline-none transition-all rounded-xs"
                   />
                   <p className="text-[9px] text-outline/50 mt-2 italic">
-                    {currentLang === 'vi' 
-                      ? 'Ghi chú: Nếu để trống, hệ thống sẽ sử dụng key mặc định.' 
-                      : 'Note: If left blank, the default system key will be used.'}
+                    {t('settings.api_key_note', { defaultValue: 'Note: If left blank, the default system key will be used.' })}
                   </p>
                 </div>
 
@@ -1323,12 +1348,12 @@ const TarotApp = () => {
                       className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
                       onClick={() => setIsConfirmClearOpen(true)}
                     >
-                      {currentLang === 'vi' ? 'Xóa bộ nhớ tạm' : 'Clear Cache'}
+                      {t('settings.clear_cache')}
                     </Button>
                    ) : (
                      <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-xl space-y-3">
                        <p className="text-[11px] text-red-400 italic font-serif text-center">
-                         {currentLang === 'vi' ? 'Bạn chắc chắn muốn xóa mọi dữ liệu cài đặt?' : 'Are you sure you want to clear all settings?'}
+                         {t('settings.clear_confirm')}
                        </p>
                        <div className="flex gap-2">
                          <Button 
@@ -1341,14 +1366,14 @@ const TarotApp = () => {
                              window.location.reload();
                            }}
                          >
-                           {currentLang === 'vi' ? 'Xóa' : 'Clear'}
+                           {t('settings.clear')}
                          </Button>
                          <Button 
                            variant="tertiary" 
                            className="flex-1"
                            onClick={() => setIsConfirmClearOpen(false)}
                          >
-                           {currentLang === 'vi' ? 'Hủy' : 'Cancel'}
+                           {t('settings.cancel')}
                          </Button>
                        </div>
                      </div>
@@ -1386,16 +1411,14 @@ const TarotApp = () => {
                   <Info className="w-5 h-5 text-primary mx-auto mb-2 opacity-50" />
                   <p className="text-[10px] uppercase tracking-wider text-primary font-bold mb-1">Oracle Guidance</p>
                   <p className="text-xs text-secondary/70 italic font-serif">
-                    {currentLang === 'vi' 
-                      ? 'Bạn có thể trò chuyện với Oracle bất cứ lúc nào, nhưng Oracle sẽ hiểu rõ bạn hơn nếu bạn đã thực hiện một trải bài.' 
-                      : 'You can converse with the Oracle anytime, but insights are deepest when tied to a specific reading.'}
+                    {t('chat.guidance', { defaultValue: 'You can converse with the Oracle anytime, but insights are deepest when tied to a specific reading.' })}
                   </p>
                 </div>
               )}
               
               {chatMessages.length === 0 && (
                 <div className="text-center py-12 opacity-30 italic font-serif">
-                  <p className="text-sm">{currentLang === 'vi' ? 'Hãy hỏi tôi bất cứ điều gì...' : 'Ask me anything...'}</p>
+                  <p className="text-sm">{t('chat.welcome')}</p>
                 </div>
               )}
               
@@ -1480,7 +1503,7 @@ const TarotApp = () => {
                     <Info className="w-5 h-5 text-primary" />
                   </div>
                   <h3 className="text-xl font-serif italic text-secondary">
-                    {currentLang === 'vi' ? 'Hướng dẫn sứ giả' : 'Messenger Guide'}
+                    {t('guide.title')}
                   </h3>
                 </div>
                 <button 
@@ -1493,29 +1516,29 @@ const TarotApp = () => {
 
               <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6 text-secondary/80 font-serif italic text-sm leading-relaxed">
                 <section>
-                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">1. {currentLang === 'vi' ? 'Khởi đầu' : 'Initiation'}</h4>
-                  <p>{currentLang === 'vi' ? 'Nhập câu hỏi của bạn hoặc điều bạn đang băn khoăn vào ô nhập liệu. Sau đó nhấn nút "Bốc bài" hoặc "Hỏi Oracle".' : 'Enter your question or what is on your mind in the input field. Then press the "Draw Card" or "Ask Oracle" button.'}</p>
+                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">{t('guide.step1_title')}</h4>
+                  <p>{t('guide.step1_desc')}</p>
                 </section>
 
                 <section>
-                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">2. {currentLang === 'vi' ? 'Nghi thức' : 'Ritual'}</h4>
-                  <p>{currentLang === 'vi' ? 'Các lá bài sẽ được xáo và trải ra theo sơ đồ bạn đã chọn. Hãy tập trung vào câu hỏi của mình trong lúc này.' : 'The cards will be shuffled and spread according to your chosen layout. Focus on your question during this time.'}</p>
+                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">{t('guide.step2_title')}</h4>
+                  <p>{t('guide.step2_desc')}</p>
                 </section>
 
                 <section>
-                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">3. {currentLang === 'vi' ? 'Lời giải' : 'Interpretation'}</h4>
-                  <p>{currentLang === 'vi' ? 'Oracle sẽ phân tích các lá bài và đưa ra lời giải đáp. Bạn có thể lưu lại vào Nhật ký nếu đã đăng nhập.' : 'The Oracle will analyze the cards and provide an interpretation. You can save it to your Journal if you are signed in.'}</p>
+                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">{t('guide.step3_title')}</h4>
+                  <p>{t('guide.step3_desc')}</p>
                 </section>
 
                 <section>
-                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">4. {currentLang === 'vi' ? 'Trò chuyện' : 'Conversation'}</h4>
-                  <p>{currentLang === 'vi' ? 'Sử dụng biểu tượng tin nhắn ở góc dưới bên phải để trò chuyện thêm với Oracle về trải bài hoặc bất cứ điều gì bạn muốn.' : 'Use the message icon in the bottom right corner to further converse with the Oracle about the reading or anything you wish.'}</p>
+                  <h4 className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">{t('guide.step4_title')}</h4>
+                  <p>{t('guide.step4_desc')}</p>
                 </section>
               </div>
 
               <div className="mt-8 pt-6 border-t border-sepia/30 text-center">
                 <Button onClick={() => setIsGuideOpen(false)} variant="primary" className="px-8 py-2 rounded-full">
-                  {currentLang === 'vi' ? 'Đã hiểu' : 'Understood'}
+                  {t('guide.understood')}
                 </Button>
               </div>
             </motion.div>
