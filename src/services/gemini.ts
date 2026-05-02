@@ -67,7 +67,7 @@ export async function* streamTarotInterpretation(
 export function getChatSession(
   readingContext: string,
   lang: string = 'en',
-  options?: { model?: string; apiKey?: string }
+  options?: { model?: string; apiKey?: string; history?: { role: 'user' | 'model'; content: string }[] }
 ) {
   const apiKey = options?.apiKey || DEFAULT_API_KEY;
   const modelName = options?.model || "gemini-3-flash-preview";
@@ -78,12 +78,27 @@ export function getChatSession(
 
   const ai = new GoogleGenAI({ apiKey });
   
+  const history = options?.history?.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  })) || [];
+
   return ai.chats.create({
     model: modelName,
+    history: history,
     config: {
       systemInstruction: lang === 'vi' 
-        ? `Bạn là Oracle vừa thực hiện trải bài Tarot sau: "${readingContext}". Hãy trả lời các câu hỏi tiếp theo dựa trên bối cảnh này bằng tiếng Việt.`
-        : `You are the Oracle that just provided this tarot reading: "${readingContext}". Please answer follow-up questions based on this context and interpretation.`
+        ? `Bạn là Nhà Tiên Tri (Oracle) vừa thực hiện trải bài Tarot sau: "${readingContext}". 
+           Nhiệm vụ của bạn:
+           1. Trả lời các câu hỏi về trải bài này một cách trọng tâm, sát nghĩa và sâu sắc.
+           2. Tránh nói dài dòng, lan man. Hãy đi thẳng vào vấn đề cốt lõi của lá bài và câu hỏi của người dùng.
+           3. Luôn giữ phong thái huyền bí, tôn nghiêm nhưng dễ hiểu.
+           4. Sử dụng tiếng Việt.`
+        : `You are the Oracle that just provided this tarot reading: "${readingContext}". 
+           Your tasks:
+           1. Answer follow-up questions accurately, insightfully, and with focus.
+           2. Be concise and stay on point. Do not wander into unrelated topics.
+           3. Maintain a mystical, professional, yet clear tone.`
     }
   });
 }

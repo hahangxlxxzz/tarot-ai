@@ -32,6 +32,7 @@ const resources = {
         "analyzing": "The vibrations are shifting...",
         "spiritual_journey": "Spiritual Journey",
         "guiding_path": "What is guiding your path today?",
+        "fate_sealed": "The cards have spoken. Reflect on their presence.",
         "invoking_will": "Invoking Cosmic Will",
         "spiritual_currents": "The spiritual currents are guiding us...",
         "error_resting": "Sorry, the Oracle is resting. Please try again later.",
@@ -50,7 +51,11 @@ const resources = {
         "placeholder": "Ask the cards further...",
         "send": "Send",
         "welcome": "Ask me anything...",
-        "error": "Very sorry, there was an error connecting to the Oracle."
+        "error": "Very sorry, there was an error connecting to the Oracle.",
+        "guidance": "You can converse with the Oracle anytime, but insights are deepest when tied to a specific reading.",
+        "previous_conversations": "Previous Conversations",
+        "recent_conversations": "Recent Conversations",
+        "no_conversations": "No previous conversations found."
       },
       "settings": {
         "clear_cache": "Clear Cache",
@@ -107,6 +112,7 @@ const resources = {
         "analyzing": "Năng lượng đang luân chuyển...",
         "spiritual_journey": "HÀNH TRÌNH TÂM LINH",
         "guiding_path": "Điều gì đang dẫn lối bước chân bạn?",
+        "fate_sealed": "Các lá bài đã hé lộ. Hãy tĩnh tâm suy ngẫm về thông điệp này.",
         "invoking_will": "KHỞI TẠO Ý CHÍ VŨ TRỤ",
         "spiritual_currents": "Dòng chảy tâm linh đang dẫn lối...",
         "error_resting": "Xin lỗi, Nhà Tiên Tri đang tạm nghỉ. Vui lòng thử lại sau.",
@@ -125,7 +131,11 @@ const resources = {
         "placeholder": "Hỏi sâu hơn về thông điệp này...",
         "send": "Gửi",
         "welcome": "Hãy hỏi tôi bất cứ điều gì...",
-        "error": "Rất tiếc, đã có lỗi khi kết nối với Nhà Tiên Tri."
+        "error": "Rất tiếc, đã có lỗi khi kết nối với Nhà Tiên Tri.",
+        "guidance": "Bạn có thể trò chuyện với Nhà Tiên Tri bất cứ lúc nào, nhưng thấu hiểu sâu sắc nhất là khi gắn liền với một trải bài cụ thể.",
+        "previous_conversations": "Các Cuộc Trò Chuyện Trước",
+        "recent_conversations": "Cuộc Trò Chuyện Gần Đây",
+        "no_conversations": "Không tìm thấy cuộc trò chuyện nào trước đó."
       },
       "settings": {
         "clear_cache": "Xóa Bộ Nhớ Tạm",
